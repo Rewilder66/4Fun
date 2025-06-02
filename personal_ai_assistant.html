@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .task-item,
+        .hobby-item,
+        .media-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover,
+        .hobby-item:hover,
+        .media-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+            border-left-color: #48bb78;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .priority-high {
+            border-left-color: #f56565;
+        }
+
+        .priority-medium {
+            border-left-color: #ed8936;
+        }
+
+        .priority-low {
+            border-left-color: #48bb78;
+        }
+
+        .hobby-progress {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .hobby-progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .rating {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .star {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #cbd5e0;
+            transition: color 0.2s ease;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #f6e05e;
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .recommendation-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            padding-left: 40px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Personal AI Assistant</h1>
+            <p>Your intelligent companion for organization, hobbies, and personalized recommendations</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('organization')">📋 Organization</button>
+            <button class="nav-tab" onclick="showTab('hobbies')">🎨 Hobbies</button>
+            <button class="nav-tab" onclick="showTab('recommendations')">💡 Recommendations</button>
+            <button class="nav-tab" onclick="showTab('analytics')">📊 Analytics</button>
+        </div>
+
+        <!-- Organization Tab -->
+        <div id="organization" class="tab-content active">
+            <div class="grid">
+                <div class="card fade-in">
+                    <h2>➕ Add New Task</h2>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskTitle">Task Title</label>
+                            <input type="text" id="taskTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDescription">Description</label>
+                            <textarea id="taskDescription" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDueDate">Due Date</label>
+                            <input type="datetime-local" id="taskDueDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskPriority">Priority</label>
+                            <select id="taskPriority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn">Add Task</button>
+                    </form>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>📝 Quick Notes</h2>
+                    <div class="form-group">
+                        <textarea id="quickNote" placeholder="Jot down your thoughts..." rows="4"></textarea>
+                    </div>
+                    <button onclick="saveNote()" class="btn">Save Note</button>
+                    <div id="notesList" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <h2>📋 My Tasks</h2>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="taskSearch" placeholder="Search tasks..." onkeyup="filterTasks()">
+                </div>
+                <div id="tasksList"></div>
+            </div>
+        </div>
+
+        <!-- Hobbies Tab -->
+        <div id="hobbies" class="tab-content">
+            <div class="grid">
+                <div class="card fade-in">
+                    <h2>🎯 Add New Hobby</h2>
+                    <form id="hobbyForm">
+                        <div class="form-group">
+                            <label for="hobbyName">Hobby Name</label>
+                            <input type="text" id="hobbyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="hobbyCategory">Category</label>
+                            <select id="hobbyCategory">
+                                <option value="creative">Creative</option>
+                                <option value="sports">Sports & Fitness</option>
+                                <option value="learning">Learning</option>
+                                <option value="collecting">Collecting</option>
+                                <option value="outdoor">Outdoor</option>
+                                <option value="tech">Technology</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="hobbyGoal">Goal (e.g., "Read 20 books")</label>
+                            <input type="text" id="hobbyGoal">
+                        </div>
+                        <div class="form-group">
+                            <label for="hobbyTarget">Target Number</label>
+                            <input type="number" id="hobbyTarget" min="1">
+                        </div>
+                        <button type="submit" class="btn">Add Hobby</button>
+                    </form>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>📊 Progress Update</h2>
+                    <div class="form-group">
+                        <label for="hobbySelect">Select Hobby</label>
+                        <select id="hobbySelect">
+                            <option value="">Choose a hobby...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="progressUpdate">Progress Update</label>
+                        <input type="text" id="progressUpdate" placeholder="What did you accomplish?">
+                    </div>
+                    <div class="form-group">
+                        <label for="progressIncrement">Increment Progress By</label>
+                        <input type="number" id="progressIncrement" min="1" value="1">
+                    </div>
+                    <button onclick="updateProgress()" class="btn">Update Progress</button>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <h2>🎨 My Hobbies</h2>
+                <div id="hobbiesList"></div>
+            </div>
+        </div>
+
+        <!-- Recommendations Tab -->
+        <div id="recommendations" class="tab-content">
+            <div class="grid">
+                <div class="card fade-in">
+                    <h2>📚 Books</h2>
+                    <form id="bookForm">
+                        <div class="form-group">
+                            <label for="bookTitle">Book Title</label>
+                            <input type="text" id="bookTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bookAuthor">Author</label>
+                            <input type="text" id="bookAuthor">
+                        </div>
+                        <div class="form-group">
+                            <label for="bookGenre">Genre</label>
+                            <select id="bookGenre">
+                                <option value="fiction">Fiction</option>
+                                <option value="non-fiction">Non-Fiction</option>
+                                <option value="mystery">Mystery</option>
+                                <option value="romance">Romance</option>
+                                <option value="sci-fi">Science Fiction</option>
+                                <option value="fantasy">Fantasy</option>
+                                <option value="biography">Biography</option>
+                                <option value="history">History</option>
+                                <option value="self-help">Self-Help</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rating</label>
+                            <div class="rating" id="bookRating">
+                                <span class="star" onclick="setRating('book', 1)">★</span>
+                                <span class="star" onclick="setRating('book', 2)">★</span>
+                                <span class="star" onclick="setRating('book', 3)">★</span>
+                                <span class="star" onclick="setRating('book', 4)">★</span>
+                                <span class="star" onclick="setRating('book', 5)">★</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Add Book</button>
+                    </form>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>🎬 Movies & TV</h2>
+                    <form id="movieForm">
+                        <div class="form-group">
+                            <label for="movieTitle">Title</label>
+                            <input type="text" id="movieTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="movieType">Type</label>
+                            <select id="movieType">
+                                <option value="movie">Movie</option>
+                                <option value="tv">TV Show</option>
+                                <option value="documentary">Documentary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="movieGenre">Genre</label>
+                            <select id="movieGenre">
+                                <option value="action">Action</option>
+                                <option value="comedy">Comedy</option>
+                                <option value="drama">Drama</option>
+                                <option value="horror">Horror</option>
+                                <option value="thriller">Thriller</option>
+                                <option value="romance">Romance</option>
+                                <option value="sci-fi">Sci-Fi</option>
+                                <option value="fantasy">Fantasy</option>
+                                <option value="documentary">Documentary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rating</label>
+                            <div class="rating" id="movieRating">
+                                <span class="star" onclick="setRating('movie', 1)">★</span>
+                                <span class="star" onclick="setRating('movie', 2)">★</span>
+                                <span class="star" onclick="setRating('movie', 3)">★</span>
+                                <span class="star" onclick="setRating('movie', 4)">★</span>
+                                <span class="star" onclick="setRating('movie', 5)">★</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Add Movie/Show</button>
+                    </form>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>🎵 Music</h2>
+                    <form id="musicForm">
+                        <div class="form-group">
+                            <label for="musicArtist">Artist</label>
+                            <input type="text" id="musicArtist" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="musicSong">Song/Album</label>
+                            <input type="text" id="musicSong">
+                        </div>
+                        <div class="form-group">
+                            <label for="musicGenre">Genre</label>
+                            <select id="musicGenre">
+                                <option value="pop">Pop</option>
+                                <option value="rock">Rock</option>
+                                <option value="hip-hop">Hip-Hop</option>
+                                <option value="electronic">Electronic</option>
+                                <option value="classical">Classical</option>
+                                <option value="jazz">Jazz</option>
+                                <option value="country">Country</option>
+                                <option value="indie">Indie</option>
+                                <option value="r&b">R&B</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rating</label>
+                            <div class="rating" id="musicRating">
+                                <span class="star" onclick="setRating('music', 1)">★</span>
+                                <span class="star" onclick="setRating('music', 2)">★</span>
+                                <span class="star" onclick="setRating('music', 3)">★</span>
+                                <span class="star" onclick="setRating('music', 4)">★</span>
+                                <span class="star" onclick="setRating('music', 5)">★</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Add Music</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <h2>💡 Personalized Recommendations</h2>
+                <button onclick="generateRecommendations()" class="btn">Generate Recommendations</button>
+                <div id="recommendationsList" class="recommendations"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="card fade-in">
+                <h2>📊 Your Statistics</h2>
+                <div class="stats" id="statsGrid"></div>
+            </div>
+
+            <div class="grid">
+                <div class="card fade-in">
+                    <h2>📈 Task Analytics</h2>
+                    <div id="taskAnalytics"></div>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>🎯 Hobby Progress</h2>
+                    <div id="hobbyAnalytics"></div>
+                </div>
+
+                <div class="card fade-in">
+                    <h2>🎭 Media Preferences</h2>
+                    <div id="mediaAnalytics"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        let hobbies = JSON.parse(localStorage.getItem('hobbies') || '[]');
+        let books = JSON.parse(localStorage.getItem('books') || '[]');
+        let movies = JSON.parse(localStorage.getItem('movies') || '[]');
+        let music = JSON.parse(localStorage.getItem('music') || '[]');
+        let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+        let currentRating = { book: 0, movie: 0, music: 0 };
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update content based on tab
+            if (tabName === 'hobbies') {
+                updateHobbySelect();
+                displayHobbies();
+            } else if (tabName === 'organization') {
+                displayTasks();
+                displayNotes();
+            } else if (tabName === 'analytics') {
+                displayAnalytics();
+            }
+        }
+
+        // Task Management
+        document.getElementById('taskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const task = {
+                id: Date.now(),
+                title: document.getElementById('taskTitle').value,
+                description: document.getElementById('taskDescription').value,
+                dueDate: document.getElementById('taskDueDate').value,
+                priority: document.getElementById('taskPriority').value,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            
+            // Reset form
+            this.reset();
+            displayTasks();
+        });
+
+        function displayTasks() {
+            const tasksList = document.getElementById('tasksList');
+            if (!tasksList) return;
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 20px;">No tasks yet. Add your first task above!</p>';
+                return;
+            }
+            
+            const sortedTasks = tasks.sort((a, b) => {
+                // Sort by completion status first, then by priority
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            });
+            
+            tasksList.innerHTML = sortedTasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''} priority-${task.priority}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h4>${task.title}</h4>
+                            ${task.description ? `<p style="color: #666; margin: 5px 0;">${task.description}</p>` : ''}
+                            ${task.dueDate ? `<p style="font-size: 0.9rem; color: #666;">📅 Due: ${new Date(task.dueDate).toLocaleString()}</p>` : ''}
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="background: var(--priority-color); color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; text-transform: uppercase;">
+                                ${task.priority}
+                            </span>
+                            <button onclick="toggleTask(${task.id})" class="btn btn-sm" style="background: ${task.completed ? '#48bb78' : '#667eea'};">
+                                ${task.completed ? '✓' : '○'}
+                            </button>
+                            <button onclick="deleteTask(${task.id})" class="btn btn-sm btn-danger">×</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                displayTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            displayTasks();
+        }
+
+        function filterTasks() {
+            const searchTerm = document.getElementById('taskSearch').value.toLowerCase();
+            const taskItems = document.querySelectorAll('.task-item');
+            
+            taskItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        // Notes functionality
+        function saveNote() {
+            const noteText = document.getElementById('quickNote').value.trim();
+            if (!noteText) return;
+            
+            const note = {
+                id: Date.now(),
+                text: noteText,
+                createdAt: new Date().toISOString()
+            };
+            
+            notes.push(note);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            
+            document.getElementById('quickNote').value = '';
+            displayNotes();
+        }
+
+        function displayNotes() {
+            const notesList = document.getElementById('notesList');
+            if (!notesList) return;
+            
+            if (notes.length === 0) {
+                notesList.innerHTML = '<p style="color: #a0aec0; font-style: italic;">No notes yet.</p>';
+                return;
+            }
+            
+            notesList.innerHTML = notes.slice(-5).reverse().map(note => `
+                <div style="background: #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <p>${note.text}</p>
+                    <small style="color: #666;">${new Date(note.createdAt).toLocaleString()}</small>
+                    <button onclick="deleteNote(${note.id})" class="btn btn-sm btn-danger" style="float: right; margin-top: -25px;">×</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            displayNotes();
+        }
+
+        // Hobby Management
+        document.getElementById('hobbyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const hobby = {
+                id: Date.now(),
+                name: document.getElementById('hobbyName').value,
+                category: document.getElementById('hobbyCategory').value,
+                goal: document.getElementById('hobbyGoal').value,
+                target: parseInt(document.getElementById('hobbyTarget').value) || 0,
+                progress: 0,
+                activities: [],
+                createdAt: new Date().toISOString()
+            };
+            
+            hobbies.push(hobby);
+            localStorage.setItem('hobbies', JSON.stringify(hobbies));
+            
+            this.reset();
+            updateHobbySelect();
+            displayHobbies();
+        });
+
+        function updateHobbySelect() {
+            const select = document.getElementById('hobbySelect');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Choose a hobby...</option>' +
+                hobbies.map(hobby => `<option value="${hobby.id}">${hobby.name}</option>`).join('');
+        }
+
+        function displayHobbies() {
+            const hobbiesList = document.getElementById('hobbiesList');
+            if (!hobbiesList) return;
+            
+            if (hobbies.length === 0) {
+                hobbiesList.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 20px;">No hobbies yet. Add your first hobby above!</p>';
+                return;
+            }
+            
+            hobbiesList.innerHTML = hobbies.map(hobby => {
+                const progressPercent = hobby.target > 0 ? (hobby.progress / hobby.target) * 100 : 0;
+                return `
+                    <div class="hobby-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h4>${hobby.name}</h4>
+                                <p style="color: #666; margin: 5px 0;">Category: ${hobby.category}</p>
+                                ${hobby.goal ? `<p style="color: #666; margin: 5px 0;">Goal: ${hobby.goal}</p>` : ''}
+                                <div class="hobby-progress">
+                                    <div class="hobby-progress-bar" style="width: ${Math.min(progressPercent, 100)}%"></div>
+                                </div>
+                                <p style="font-size: 0.9rem; color: #666;">${hobby.progress}${hobby.target > 0 ? ` / ${hobby.target}` : ''} (${Math.round(progressPercent)}%)</p>
+                                ${hobby.activities.length > 0 ? `
+                                    <details style="margin-top: 10px;">
+                                        <summary style="cursor: pointer; color: #667eea;">Recent Activities (${hobby.activities.length})</summary>
+                                        <div style="margin-top: 10px;">
+                                            ${hobby.activities.slice(-3).reverse().map(activity => `
+                                                <div style="background: #f0f8ff; padding: 8px; border-radius: 6px; margin-bottom: 5px; font-size: 0.9rem;">
+                                                    ${activity.description} <small>(${new Date(activity.date).toLocaleDateString()})</small>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                            <button onclick="deleteHobby(${hobby.id})" class="btn btn-sm btn-danger">×</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateProgress() {
+            const hobbyId = parseInt(document.getElementById('hobbySelect').value);
+            const updateText = document.getElementById('progressUpdate').value.trim();
+            const increment = parseInt(document.getElementById('progressIncrement').value) || 1;
+            
+            if (!hobbyId || !updateText) {
+                alert('Please select a hobby and add a progress update.');
+                return;
+            }
+            
+            const hobby = hobbies.find(h => h.id === hobbyId);
+            if (hobby) {
+                hobby.progress += increment;
+                hobby.activities.push({
+                    description: updateText,
+                    increment: increment,
+                    date: new Date().toISOString()
+                });
+                
+                localStorage.setItem('hobbies', JSON.stringify(hobbies));
+                
+                document.getElementById('progressUpdate').value = '';
+                document.getElementById('progressIncrement').value = '1';
+                displayHobbies();
+            }
+        }
+
+        function deleteHobby(id) {
+            hobbies = hobbies.filter(h => h.id !== id);
+            localStorage.setItem('hobbies', JSON.stringify(hobbies));
+            updateHobbySelect();
+            displayHobbies();
+        }
+
+        // Rating functionality
+        function setRating(type, rating) {
+            currentRating[type] = rating;
+            const stars = document.querySelectorAll(`#${type}Rating .star`);
+            stars.forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+        }
+
+        // Media Management
+        document.getElementById('bookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const book = {
+                id: Date.now(),
+                title: document.getElementById('bookTitle').value,
+                author: document.getElementById('bookAuthor').value,
+                genre: document.getElementById('bookGenre').value,
+                rating: currentRating.book,
+                createdAt: new Date().toISOString()
+            };
+            
+            books.push(book);
+            localStorage.setItem('books', JSON.stringify(books));
+            
+            this.reset();
+            currentRating.book = 0;
+            document.querySelectorAll('#bookRating .star').forEach(star => star.classList.remove('active'));
+        });
+
+        document.getElementById('movieForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const movie = {
+                id: Date.now(),
+                title: document.getElementById('movieTitle').value,
+                type: document.getElementById('movieType').value,
+                genre: document.getElementById('movieGenre').value,
+                rating: currentRating.movie,
+                createdAt: new Date().toISOString()
+            };
+            
+            movies.push(movie);
+            localStorage.setItem('movies', JSON.stringify(movies));
+            
+            this.reset();
+            currentRating.movie = 0;
+            document.querySelectorAll('#movieRating .star').forEach(star => star.classList.remove('active'));
+        });
+
+        document.getElementById('musicForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const musicItem = {
+                id: Date.now(),
+                artist: document.getElementById('musicArtist').value,
+                song: document.getElementById('musicSong').value,
+                genre: document.getElementById('musicGenre').value,
+                rating: currentRating.music,
+                createdAt: new Date().toISOString()
+            };
+            
+            music.push(musicItem);
+            localStorage.setItem('music', JSON.stringify(music));
+            
+            this.reset();
+            currentRating.music = 0;
+            document.querySelectorAll('#musicRating .star').forEach(star => star.classList.remove('active'));
+        });
+
+        // Recommendations Engine
+        function generateRecommendations() {
+            const recommendationsList = document.getElementById('recommendationsList');
+            
+            // Analyze user preferences
+            const bookGenres = getTopGenres(books, 'genre');
+            const movieGenres = getTopGenres(movies, 'genre');
+            const musicGenres = getTopGenres(music, 'genre');
+            
+            const bookRecommendations = generateBookRecommendations(bookGenres);
+            const movieRecommendations = generateMovieRecommendations(movieGenres);
+            const musicRecommendations = generateMusicRecommendations(musicGenres);
+            
+            recommendationsList.innerHTML = `
+                <h3>📚 Book Recommendations</h3>
+                ${bookRecommendations.map(rec => `
+                    <div class="recommendation-item">
+                        <h4>${rec.title}</h4>
+                        <p><strong>Author:</strong> ${rec.author}</p>
+                        <p><strong>Genre:</strong> ${rec.genre}</p>
+                        <p><strong>Why:</strong> ${rec.reason}</p>
+                    </div>
+                `).join('')}
+                
+                <h3>🎬 Movie/TV Recommendations</h3>
+                ${movieRecommendations.map(rec => `
+                    <div class="recommendation-item">
+                        <h4>${rec.title}</h4>
+                        <p><strong>Type:</strong> ${rec.type}</p>
+                        <p><strong>Genre:</strong> ${rec.genre}</p>
+                        <p><strong>Why:</strong> ${rec.reason}</p>
+                    </div>
+                `).join('')}
+                
+                <h3>🎵 Music Recommendations</h3>
+                ${musicRecommendations.map(rec => `
+                    <div class="recommendation-item">
+                        <h4>${rec.artist}</h4>
+                        <p><strong>Song/Album:</strong> ${rec.song}</p>
+                        <p><strong>Genre:</strong> ${rec.genre}</p>
+                        <p><strong>Why:</strong> ${rec.reason}</p>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function getTopGenres(items, genreField) {
+            const genreCounts = {};
+            items.forEach(item => {
+                if (item.rating >= 4) { // Only consider highly rated items
+                    genreCounts[item[genreField]] = (genreCounts[item[genreField]] || 0) + 1;
+                }
+            });
+            
+            return Object.entries(genreCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3)
+                .map(([genre]) => genre);
+        }
+
+        function generateBookRecommendations(topGenres) {
+            const recommendations = [
+                // Fiction recommendations
+                { title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid", genre: "fiction", reason: "Popular contemporary fiction with compelling characters" },
+                { title: "Project Hail Mary", author: "Andy Weir", genre: "sci-fi", reason: "Engaging science fiction with humor and heart" },
+                { title: "The Silent Patient", author: "Alex Michaelides", genre: "mystery", reason: "Psychological thriller with unexpected twists" },
+                { title: "Educated", author: "Tara Westover", genre: "non-fiction", reason: "Powerful memoir about education and family" },
+                { title: "The Song of Achilles", author: "Madeline Miller", genre: "fantasy", reason: "Beautiful retelling of Greek mythology" },
+                { title: "Atomic Habits", author: "James Clear", genre: "self-help", reason: "Practical guide to building good habits" }
+            ];
+            
+            // Filter based on user preferences
+            const filtered = recommendations.filter(rec => 
+                topGenres.length === 0 || topGenres.includes(rec.genre)
+            );
+            
+            return filtered.slice(0, 3);
+        }
+
+        function generateMovieRecommendations(topGenres) {
+            const recommendations = [
+                { title: "Everything Everywhere All at Once", type: "movie", genre: "sci-fi", reason: "Mind-bending multiverse adventure with heart" },
+                { title: "The Bear", type: "tv", genre: "drama", reason: "Intense kitchen drama with excellent character development" },
+                { title: "Knives Out", type: "movie", genre: "mystery", reason: "Modern whodunit with clever writing" },
+                { title: "Schitt's Creek", type: "tv", genre: "comedy", reason: "Heartwarming comedy about family and growth" },
+                { title: "Dune", type: "movie", genre: "sci-fi", reason: "Epic space opera with stunning visuals" },
+                { title: "The Queen's Gambit", type: "tv", genre: "drama", reason: "Compelling story of chess prodigy's journey" }
+            ];
+            
+            const filtered = recommendations.filter(rec => 
+                topGenres.length === 0 || topGenres.includes(rec.genre)
+            );
+            
+            return filtered.slice(0, 3);
+        }
+
+        function generateMusicRecommendations(topGenres) {
+            const recommendations = [
+                { artist: "Phoebe Bridgers", song: "Stranger in the Alps", genre: "indie", reason: "Introspective indie folk with beautiful lyrics" },
+                { artist: "The Weeknd", song: "After Hours", genre: "pop", reason: "Atmospheric pop with retro influences" },
+                { artist: "Tame Impala", song: "Currents", genre: "electronic", reason: "Psychedelic electronic rock fusion" },
+                { artist: "Kendrick Lamar", song: "To Pimp a Butterfly", genre: "hip-hop", reason: "Groundbreaking hip-hop with jazz influences" },
+                { artist: "Billie Eilish", song: "Happier Than Ever", genre: "pop", reason: "Innovative pop with emotional depth" },
+                { artist: "Glass Animals", song: "Dreamland", genre: "indie", reason: "Dreamy indie pop with unique soundscapes" }
+            ];
+            
+            const filtered = recommendations.filter(rec => 
+                topGenres.length === 0 || topGenres.includes(rec.genre)
+            );
+            
+            return filtered.slice(0, 3);
+        }
+
+        // Analytics
+        function displayAnalytics() {
+            displayStats();
+            displayTaskAnalytics();
+            displayHobbyAnalytics();
+            displayMediaAnalytics();
+        }
+
+        function displayStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            if (!statsGrid) return;
+            
+            const completedTasks = tasks.filter(t => t.completed).length;
+            const totalHobbies = hobbies.length;
+            const totalMedia = books.length + movies.length + music.length;
+            const totalNotes = notes.length;
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${tasks.length}</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${completedTasks}</div>
+                    <div class="stat-label">Completed Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalHobbies}</div>
+                    <div class="stat-label">Active Hobbies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalMedia}</div>
+                    <div class="stat-label">Media Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalNotes}</div>
+                    <div class="stat-label">Notes Saved</div>
+                </div>
+            `;
+        }
+
+        function displayTaskAnalytics() {
+            const taskAnalytics = document.getElementById('taskAnalytics');
+            if (!taskAnalytics) return;
+            
+            const priorityCounts = { high: 0, medium: 0, low: 0 };
+            const completedByPriority = { high: 0, medium: 0, low: 0 };
+            
+            tasks.forEach(task => {
+                priorityCounts[task.priority]++;
+                if (task.completed) {
+                    completedByPriority[task.priority]++;
+                }
+            });
+            
+            taskAnalytics.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>Tasks by Priority</h4>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <div style="flex: 1; background: #fee; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #f56565;">${priorityCounts.high}</div>
+                            <div style="color: #666;">High Priority</div>
+                        </div>
+                        <div style="flex: 1; background: #fef5e7; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #ed8936;">${priorityCounts.medium}</div>
+                            <div style="color: #666;">Medium Priority</div>
+                        </div>
+                        <div style="flex: 1; background: #f0fff4; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #48bb78;">${priorityCounts.low}</div>
+                            <div style="color: #666;">Low Priority</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4>Completion Rate</h4>
+                    <p style="margin-top: 10px;">Overall: ${tasks.length > 0 ? Math.round((tasks.filter(t => t.completed).length / tasks.length) * 100) : 0}%</p>
+                </div>
+            `;
+        }
+
+        function displayHobbyAnalytics() {
+            const hobbyAnalytics = document.getElementById('hobbyAnalytics');
+            if (!hobbyAnalytics) return;
+            
+            if (hobbies.length === 0) {
+                hobbyAnalytics.innerHTML = '<p style="color: #a0aec0;">No hobbies to analyze yet.</p>';
+                return;
+            }
+            
+            const categoryCounts = {};
+            let totalProgress = 0;
+            let totalActivities = 0;
+            
+            hobbies.forEach(hobby => {
+                categoryCounts[hobby.category] = (categoryCounts[hobby.category] || 0) + 1;
+                totalProgress += hobby.progress;
+                totalActivities += hobby.activities.length;
+            });
+            
+            const mostPopularCategory = Object.entries(categoryCounts).sort(([,a], [,b]) => b - a)[0];
+            
+            hobbyAnalytics.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>Hobby Categories</h4>
+                    ${Object.entries(categoryCounts).map(([category, count]) => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                            <span style="text-transform: capitalize;">${category}</span>
+                            <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem;">${count}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div>
+                    <h4>Activity Summary</h4>
+                    <p style="margin: 5px 0;">Total Activities Logged: ${totalActivities}</p>
+                    <p style="margin: 5px 0;">Average per Hobby: ${hobbies.length > 0 ? Math.round(totalActivities / hobbies.length) : 0}</p>
+                    ${mostPopularCategory ? `<p style="margin: 5px 0;">Most Popular Category: ${mostPopularCategory[0]}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function displayMediaAnalytics() {
+            const mediaAnalytics = document.getElementById('mediaAnalytics');
+            if (!mediaAnalytics) return;
+            
+            const bookGenres = getGenreAnalytics(books, 'genre');
+            const movieGenres = getGenreAnalytics(movies, 'genre');
+            const musicGenres = getGenreAnalytics(music, 'genre');
+            
+            const avgBookRating = books.length > 0 ? (books.reduce((sum, book) => sum + book.rating, 0) / books.length).toFixed(1) : 0;
+            const avgMovieRating = movies.length > 0 ? (movies.reduce((sum, movie) => sum + movie.rating, 0) / movies.length).toFixed(1) : 0;
+            const avgMusicRating = music.length > 0 ? (music.reduce((sum, song) => sum + song.rating, 0) / music.length).toFixed(1) : 0;
+            
+            mediaAnalytics.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>Average Ratings</h4>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <div style="flex: 1; background: #f7fafc; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">⭐ ${avgBookRating}</div>
+                            <div style="color: #666;">Books</div>
+                        </div>
+                        <div style="flex: 1; background: #f7fafc; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">⭐ ${avgMovieRating}</div>
+                            <div style="color: #666;">Movies/TV</div>
+                        </div>
+                        <div style="flex: 1; background: #f7fafc; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #667eea;">⭐ ${avgMusicRating}</div>
+                            <div style="color: #666;">Music</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4>Top Genres</h4>
+                    <div style="margin-top: 10px;">
+                        <p><strong>Books:</strong> ${bookGenres.slice(0, 3).map(([genre, count]) => `${genre} (${count})`).join(', ') || 'None yet'}</p>
+                        <p><strong>Movies/TV:</strong> ${movieGenres.slice(0, 3).map(([genre, count]) => `${genre} (${count})`).join(', ') || 'None yet'}</p>
+                        <p><strong>Music:</strong> ${musicGenres.slice(0, 3).map(([genre, count]) => `${genre} (${count})`).join(', ') || 'None yet'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getGenreAnalytics(items, genreField) {
+            const genreCounts = {};
+            items.forEach(item => {
+                genreCounts[item[genreField]] = (genreCounts[item[genreField]] || 0) + 1;
+            });
+            
+            return Object.entries(genreCounts).sort(([,a], [,b]) => b - a);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            displayTasks();
+            displayNotes();
+            updateHobbySelect();
+            displayHobbies();
+            displayAnalytics();
+        });
+    </script>
+</body>
+</html>
