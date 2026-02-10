@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingredient Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+        
+        .upload-area.dragging {
+            border-color: #764ba2;
+            background: #e8e9ff;
+        }
+        
+        .camera-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-text {
+            color: #667eea;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .preview-image {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .analyze-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ingredient-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .ingredient-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.05em;
+        }
+        
+        .ingredient-explanation {
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Ingredient Scanner</h1>
+            <p>Snap, scan, and simplify ingredients</p>
+        </div>
+        
+        <div class="card">
+            <div class="upload-area" id="uploadArea">
+                <div class="camera-icon">📸</div>
+                <div class="upload-text">Tap to take a photo or upload an image</div>
+                <input type="file" id="fileInput" accept="image/*" capture="environment">
+            </div>
+            
+            <div class="preview-container" id="previewContainer">
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <button class="analyze-btn" id="analyzeBtn">Analyze Ingredients</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Analyzing your image...</div>
+            </div>
+            
+            <div class="error" id="error"></div>
+        </div>
+        
+        <div class="card results" id="results">
+            <h2 style="margin-bottom: 20px; color: #333;">Simplified Ingredients</h2>
+            <div id="ingredientsList"></div>
+            <button class="reset-btn" id="resetBtn">Scan Another Product</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const ingredientsList = document.getElementById('ingredientsList');
+        const resetBtn = document.getElementById('resetBtn');
+        const errorDiv = document.getElementById('error');
+
+        let selectedImage = null;
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImageFile(file);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImageFile(file);
+            }
+        });
+
+        function handleImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImage = e.target.result;
+                previewImage.src = selectedImage;
+                previewContainer.style.display = 'block';
+                errorDiv.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedImage) return;
+
+            analyzeBtn.disabled = true;
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            results.style.display = 'none';
+
+            try {
+                // Convert base64 to clean format for API
+                const base64Data = selectedImage.split(',')[1];
+
+                // Call Claude API to analyze the image
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'image',
+                                    source: {
+                                        type: 'base64',
+                                        media_type: 'image/jpeg',
+                                        data: base64Data
+                                    }
+                                },
+                                {
+                                    type: 'text',
+                                    text: `Please analyze this image and look for ingredient lists. For each ingredient you find:
+1. Extract the ingredient name exactly as written
+2. Provide a simple, easy-to-understand explanation of what it is
+3. If it's a chemical/scientific name, translate it to common terms
+
+Format your response as JSON with this structure:
+{
+  "ingredients": [
+    {
+      "name": "ingredient name as written",
+      "explanation": "simple explanation"
+    }
+  ]
+}
+
+If you can't find any ingredients in the image, return:
+{
+  "ingredients": [],
+  "message": "No ingredient list found in this image"
+}`
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Extract the text response
+                const textContent = data.content.find(item => item.type === 'text');
+                if (!textContent) {
+                    throw new Error('No response from API');
+                }
+
+                // Parse the JSON response
+                let jsonText = textContent.text.trim();
+                // Remove markdown code blocks if present
+                jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+                const result = JSON.parse(jsonText);
+
+                // Display results
+                displayResults(result);
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = 'Sorry, there was an error analyzing the image. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(result) {
+            ingredientsList.innerHTML = '';
+
+            if (result.message) {
+                ingredientsList.innerHTML = `<div class="ingredient-item">
+                    <div class="ingredient-explanation">${result.message}</div>
+                </div>`;
+            } else if (result.ingredients && result.ingredients.length > 0) {
+                result.ingredients.forEach(ingredient => {
+                    const item = document.createElement('div');
+                    item.className = 'ingredient-item';
+                    item.innerHTML = `
+                        <div class="ingredient-name">${ingredient.name}</div>
+                        <div class="ingredient-explanation">${ingredient.explanation}</div>
+                    `;
+                    ingredientsList.appendChild(item);
+                });
+            } else {
+                ingredientsList.innerHTML = `<div class="ingredient-item">
+                    <div class="ingredient-explanation">No ingredients found in this image.</div>
+                </div>`;
+            }
+
+            results.style.display = 'block';
+        }
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            selectedImage = null;
+            previewContainer.style.display = 'none';
+            results.style.display = 'none';
+            errorDiv.style.display = 'none';
+            fileInput.value = '';
+        });
+    </script>
+</body>
+</html>
