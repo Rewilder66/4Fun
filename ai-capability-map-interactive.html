@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Organizational Capability Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050d1a;
+    --grid: rgba(0,200,255,0.04);
+    --line: rgba(0,200,255,0.15);
+    --accent: #00c8ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --accent4: #bf6bff;
+    --text: #e8f4fd;
+    --muted: rgba(232,244,253,0.45);
+    --card: rgba(0,200,255,0.06);
+    --card-border: rgba(0,200,255,0.2);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(rgba(0,200,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.015) 1px, transparent 1px);
+    background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+  header { margin-bottom: 48px; position: relative; }
+  .header-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(26px, 4vw, 48px); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  .subtitle { margin-top: 12px; color: var(--muted); font-size: 14px; font-weight: 400; max-width: 500px; line-height: 1.6; }
+  .click-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    padding: 6px 12px;
+    border: 1px solid rgba(0,200,255,0.25);
+    border-radius: 20px;
+    background: rgba(0,200,255,0.06);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  .click-hint::before { content: '◉'; font-size: 8px; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .corner-mark {
+    position: absolute; top: 0; right: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: var(--muted);
+    text-align: right; line-height: 1.8;
+  }
+  .legend {
+    display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .map { display: flex; flex-direction: column; gap: 18px; }
+  .layer { position: relative; }
+  .layer-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .layer-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); min-width: 22px; }
+  .layer-label {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 2px;
+  }
+  .layer-divider { flex: 1; height: 1px; background: var(--line); }
+  .cards { display: grid; gap: 10px; }
+  .layer-0 .cards { grid-template-columns: repeat(3, 1fr); }
+  .layer-1 .cards { grid-template-columns: repeat(5, 1fr); }
+  .layer-2 .cards { grid-template-columns: repeat(4, 1fr); }
+  .layer-3 .cards { grid-template-columns: repeat(3, 1fr); }
+  .layer-4 .cards { grid-template-columns: repeat(2, 1fr); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    user-select: none;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .card-click-indicator {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover .card-click-indicator { opacity: 0.6; }
+  .card:hover { transform: translateY(-2px); }
+  .card.active { transform: translateY(-2px); }
+
+  .card-title { font-size: 13px; font-weight: 600; margin-bottom: 7px; line-height: 1.3; }
+  .card-items { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .card-items li {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--muted); padding-left: 12px; position: relative; line-height: 1.5;
+  }
+  .card-items li::before { content: '→'; position: absolute; left: 0; opacity: 0.5; }
+  .card-tag {
+    display: inline-block; font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 2px; margin-bottom: 8px;
+  }
+
+  /* Color themes */
+  .c-cyan .card::before { background: var(--accent); }
+  .c-cyan .card:hover, .c-cyan .card.active { background: rgba(0,200,255,0.12); border-color: rgba(0,200,255,0.6); box-shadow: 0 8px 30px rgba(0,200,255,0.12); }
+  .c-cyan .layer-label { color: var(--accent); border: 1px solid rgba(0,200,255,0.3); background: rgba(0,200,255,0.08); }
+  .c-cyan .card-tag { background: rgba(0,200,255,0.15); color: var(--accent); }
+
+  .c-orange .card::before { background: var(--accent2); }
+  .c-orange .card:hover, .c-orange .card.active { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.5); box-shadow: 0 8px 30px rgba(255,107,53,0.1); }
+  .c-orange .layer-label { color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); background: rgba(255,107,53,0.08); }
+  .c-orange .card-tag { background: rgba(255,107,53,0.15); color: var(--accent2); }
+
+  .c-green .card::before { background: var(--accent3); }
+  .c-green .card:hover, .c-green .card.active { background: rgba(127,255,107,0.09); border-color: rgba(127,255,107,0.45); box-shadow: 0 8px 30px rgba(127,255,107,0.08); }
+  .c-green .layer-label { color: var(--accent3); border: 1px solid rgba(127,255,107,0.3); background: rgba(127,255,107,0.07); }
+  .c-green .card-tag { background: rgba(127,255,107,0.12); color: var(--accent3); }
+
+  .c-purple .card::before { background: var(--accent4); }
+  .c-purple .card:hover, .c-purple .card.active { background: rgba(191,107,255,0.1); border-color: rgba(191,107,255,0.5); box-shadow: 0 8px 30px rgba(191,107,255,0.1); }
+  .c-purple .layer-label { color: var(--accent4); border: 1px solid rgba(191,107,255,0.3); background: rgba(191,107,255,0.08); }
+  .c-purple .card-tag { background: rgba(191,107,255,0.12); color: var(--accent4); }
+
+  .c-white .card::before { background: rgba(255,255,255,0.5); }
+  .c-white .card:hover, .c-white .card.active { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.35); box-shadow: 0 8px 30px rgba(255,255,255,0.05); }
+  .c-white .layer-label { color: var(--text); border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+  .c-white .card-tag { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+
+  /* ── TRAINING PANEL ── */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,5,15,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+  .training-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(580px, 100vw);
+    height: 100vh;
+    background: #07111f;
+    border-left: 1px solid var(--line);
+    z-index: 101;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    flex-direction: column;
+  }
+  .training-panel.open { transform: translateX(0); }
+
+  .panel-header {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: #07111f;
+    z-index: 2;
+  }
+  .panel-close {
+    position: absolute;
+    top: 20px; right: 24px;
+    width: 32px; height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .panel-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+  .panel-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .panel-title {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    padding-right: 40px;
+  }
+  .panel-layer-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .panel-body {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    flex: 1;
+  }
+
+  .panel-section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .panel-what {
+    font-size: 14px;
+    line-height: 1.75;
+    color: rgba(232,244,253,0.85);
+  }
+
+  .panel-why {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 16px 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(232,244,253,0.75);
+    font-style: italic;
+  }
+
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .check-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(232,244,253,0.8);
+  }
+  .check-box {
+    width: 18px; height: 18px;
+    min-width: 18px;
+    border-radius: 3px;
+    border: 1px solid;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 10px;
+    background: transparent;
+  }
+  .check-box.checked { color: #07111f; }
+  .check-item.checked-item .check-text { text-decoration: line-through; opacity: 0.45; }
+
+  .maturity-section {}
+  .maturity-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .maturity-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    border-left-width: 3px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    min-width: 20px;
+    padding-top: 1px;
+    opacity: 0.5;
+  }
+
+  .pitfalls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pitfall {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(232,244,253,0.75);
+  }
+  .pitfall::before { content: '⚠'; font-size: 12px; opacity: 0.6; margin-top: 1px; }
+
+  .panel-progress {
+    border-top: 1px solid var(--line);
+    padding: 20px 32px;
+    position: sticky;
+    bottom: 0;
+    background: #07111f;
+  }
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-bar-bg {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .maturity-bar { margin-top: 40px; }
+  .maturity-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+  .maturity-track { height: 5px; background: linear-gradient(90deg, rgba(0,200,255,0.15), rgba(0,200,255,0.8), rgba(127,255,107,0.8), rgba(255,107,53,0.9)); border-radius: 3px; }
+  .maturity-ticks { display: flex; justify-content: space-between; margin-top: 8px; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); }
+
+  footer {
+    margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;
+  }
+  .footer-note { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.8; }
+
+  @media (max-width: 900px) {
+    .layer-0 .cards, .layer-1 .cards { grid-template-columns: repeat(2, 1fr); }
+    .layer-2 .cards, .layer-3 .cards { grid-template-columns: repeat(2, 1fr); }
+    .layer-4 .cards { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr !important; }
+    .wrapper { padding: 28px 16px 60px; }
+    .training-panel { width: 100vw; }
+    .panel-body, .panel-header { padding-left: 20px; padding-right: 20px; }
+    .panel-progress { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="header-label">Organizational Capability Map</div>
+    <h1>AI <span>Capabilities</span><br>Framework</h1>
+    <p class="subtitle">A layered view of the AI capabilities an organization needs to build, scale, and govern intelligent systems.</p>
+    <div class="click-hint">Click any capability card to open training</div>
+    <div class="corner-mark">v1.0 · 2025<br>REV-A<br>INTERACTIVE</div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Infrastructure</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Core AI</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div>Platform</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent4)"></div>Applications</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.5)"></div>Governance</div>
+  </div>
+
+  <div class="map">
+    <!-- L1 -->
+    <div class="layer layer-0 c-cyan">
+      <div class="layer-header">
+        <span class="layer-num">L1</span>
+        <span class="layer-label">Data & Infrastructure Foundation</span>
+        <div class="layer-divider"></div>
+      </div>
+      <div class="cards">
+        <div class="card" data-id="data-acq" onclick="openPanel('data-acq')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Data</span>
+          <div class="card-title">Data Acquisition & Management</div>
+          <ul class="card-items">
+            <li>Structured & unstructured ingestion</li>
+            <li>Data pipelines & orchestration</li>
+            <li>Labeling & annotation ops</li>
+            <li>Synthetic data generation</li>
+          </ul>
+        </div>
+        <div class="card" data-id="data-platform" onclick="openPanel('data-platform')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Storage</span>
+          <div class="card-title">Data Platform & Storage</div>
+          <ul class="card-items">
+            <li>Feature store</li>
+            <li>Vector database / embedding store</li>
+            <li>Data warehouse & lakehouse</li>
+            <li>Real-time streaming infra</li>
+          </ul>
+        </div>
+        <div class="card" data-id="compute" onclick="openPanel('compute')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Compute</span>
+          <div class="card-title">Compute & Cloud Infrastructure</div>
+          <ul class="card-items">
+            <li>GPU/TPU cluster management</li>
+            <li>Distributed training infra</li>
+            <li>Inference serving infra</li>
+            <li>Cost optimization & FinOps</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2 -->
+    <div class="layer layer-1 c-orange">
+      <div class="layer-header">
+        <span class="layer-num">L2</span>
+        <span class="layer-label">Core AI Capabilities</span>
+        <div class="layer-divider"></div>
+      </div>
+      <div class="cards">
+        <div class="card" data-id="llm" onclick="openPanel('llm')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">NLP / LLM</span>
+          <div class="card-title">Language & Generative AI</div>
+          <ul class="card-items">
+            <li>LLM fine-tuning & RLHF</li>
+            <li>RAG architecture</li>
+            <li>Prompt engineering</li>
+            <li>Multi-modal models</li>
+          </ul>
+        </div>
+        <div class="card" data-id="vision" onclick="openPanel('vision')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Vision</span>
+          <div class="card-title">Computer Vision</div>
+          <ul class="card-items">
+            <li>Object detection</li>
+            <li>Image/video classification</li>
+            <li>Generative image models</li>
+            <li>Document AI & OCR</li>
+          </ul>
+        </div>
+        <div class="card" data-id="classicml" onclick="openPanel('classicml')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Prediction</span>
+          <div class="card-title">Classical ML & Predictive</div>
+          <ul class="card-items">
+            <li>Forecasting & time series</li>
+            <li>Anomaly detection</li>
+            <li>Recommendation systems</li>
+            <li>Tabular ML & AutoML</li>
+          </ul>
+        </div>
+        <div class="card" data-id="agents" onclick="openPanel('agents')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Agents</span>
+          <div class="card-title">Agentic AI & Automation</div>
+          <ul class="card-items">
+            <li>Multi-agent orchestration</li>
+            <li>Tool use & function calling</li>
+            <li>Long-horizon planning</li>
+            <li>Human-in-the-loop design</li>
+          </ul>
+        </div>
+        <div class="card" data-id="audio" onclick="openPanel('audio')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Audio</span>
+          <div class="card-title">Speech & Audio AI</div>
+          <ul class="card-items">
+            <li>ASR / speech-to-text</li>
+            <li>TTS / voice synthesis</li>
+            <li>Speaker diarization</li>
+            <li>Audio event detection</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- L3 -->
+    <div class="layer layer-2 c-green">
+      <div class="layer-header">
+        <span class="layer-num">L3</span>
+        <span class="layer-label">AI Platform & MLOps</span>
+        <div class="layer-divider"></div>
+      </div>
+      <div class="cards">
+        <div class="card" data-id="model-lifecycle" onclick="openPanel('model-lifecycle')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">MLOps</span>
+          <div class="card-title">Model Lifecycle Management</div>
+          <ul class="card-items">
+            <li>Experiment tracking</li>
+            <li>Model registry & versioning</li>
+            <li>CI/CD for ML pipelines</li>
+            <li>Drift detection & monitoring</li>
+          </ul>
+        </div>
+        <div class="card" data-id="deployment" onclick="openPanel('deployment')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Serving</span>
+          <div class="card-title">Model Deployment & Serving</div>
+          <ul class="card-items">
+            <li>A/B testing & canary rollouts</li>
+            <li>Batch vs. real-time inference</li>
+            <li>Model compression & optimization</li>
+            <li>API gateway & rate limiting</li>
+          </ul>
+        </div>
+        <div class="card" data-id="devex" onclick="openPanel('devex')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Dev Tools</span>
+          <div class="card-title">AI Developer Experience</div>
+          <ul class="card-items">
+            <li>Internal AI SDK / libraries</li>
+            <li>Prompt management tooling</li>
+            <li>AI-assisted development</li>
+            <li>Evaluation & benchmarking</li>
+          </ul>
+        </div>
+        <div class="card" data-id="evals" onclick="openPanel('evals')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Evals</span>
+          <div class="card-title">Testing & Evaluation</div>
+          <ul class="card-items">
+            <li>Automated eval pipelines</li>
+            <li>Human eval & red-teaming</li>
+            <li>Output quality scoring</li>
+            <li>Regression testing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- L4 -->
+    <div class="layer layer-3 c-purple">
+      <div class="layer-header">
+        <span class="layer-num">L4</span>
+        <span class="layer-label">Business Application Layer</span>
+        <div class="layer-divider"></div>
+      </div>
+      <div class="cards">
+        <div class="card" data-id="customer-ai" onclick="openPanel('customer-ai')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Customer</span>
+          <div class="card-title">Customer-Facing AI</div>
+          <ul class="card-items">
+            <li>Conversational AI & chatbots</li>
+            <li>Personalization engines</li>
+            <li>AI-powered search & discovery</li>
+            <li>Proactive outreach & nurture</li>
+          </ul>
+        </div>
+        <div class="card" data-id="ops-ai" onclick="openPanel('ops-ai')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Operations</span>
+          <div class="card-title">Operational AI</div>
+          <ul class="card-items">
+            <li>Process automation & RPA+AI</li>
+            <li>Supply chain intelligence</li>
+            <li>Predictive maintenance</li>
+            <li>Quality control & inspection</li>
+          </ul>
+        </div>
+        <div class="card" data-id="enterprise-ai" onclick="openPanel('enterprise-ai')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Internal</span>
+          <div class="card-title">Enterprise Productivity AI</div>
+          <ul class="card-items">
+            <li>Internal knowledge assistants</li>
+            <li>Code generation & review</li>
+            <li>Document processing</li>
+            <li>AI-augmented decisions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- L5 -->
+    <div class="layer layer-4 c-white">
+      <div class="layer-header">
+        <span class="layer-num">L5</span>
+        <span class="layer-label">Governance, Risk & Enablement</span>
+        <div class="layer-divider"></div>
+      </div>
+      <div class="cards">
+        <div class="card" data-id="governance" onclick="openPanel('governance')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Governance</span>
+          <div class="card-title">AI Risk, Ethics & Compliance</div>
+          <ul class="card-items">
+            <li>AI use case review & approval</li>
+            <li>Bias auditing & fairness testing</li>
+            <li>Explainability & interpretability</li>
+            <li>Regulatory compliance (EU AI Act…)</li>
+            <li>Security & adversarial robustness</li>
+          </ul>
+        </div>
+        <div class="card" data-id="enablement" onclick="openPanel('enablement')">
+          <span class="card-click-indicator">↗</span>
+          <span class="card-tag">Enablement</span>
+          <div class="card-title">Talent, Culture & Strategy</div>
+          <ul class="card-items">
+            <li>AI literacy & upskilling programs</li>
+            <li>Center of Excellence (CoE)</li>
+            <li>AI strategy & portfolio prioritization</li>
+            <li>Build vs. buy vs. partner framework</li>
+            <li>Change management & adoption</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="maturity-bar">
+    <div class="maturity-label">Organizational AI Maturity →</div>
+    <div class="maturity-track"></div>
+    <div class="maturity-ticks">
+      <span>Exploring</span><span>Experimenting</span><span>Scaling</span><span>Industrializing</span><span>AI-Native</span>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-note">
+      AI ORGANIZATIONAL CAPABILITY MAP · INTERACTIVE TRAINING EDITION<br>
+      Click any card to explore definitions, readiness checklists & common pitfalls
+    </div>
+  </footer>
+</div>
+
+<!-- Overlay -->
+<div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Training Panel -->
+<div class="training-panel" id="trainingPanel">
+  <div class="panel-header">
+    <button class="panel-close" onclick="closePanel()">✕</button>
+    <div class="panel-tag" id="panelTag"></div>
+    <div class="panel-title" id="panelTitle"></div>
+    <div class="panel-layer-badge" id="panelLayer"></div>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+  <div class="panel-progress">
+    <div class="progress-label">
+      <span>READINESS CHECKLIST PROGRESS</span>
+      <span id="progressText">0 / 0</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAPABILITIES = {
+  "data-acq": {
+    tag: "L1 · Data",
+    tagColor: "var(--accent)",
+    layer: "Layer 1 — Data & Infrastructure Foundation",
+    title: "Data Acquisition & Management",
+    what: "Data acquisition is the practice of identifying, collecting, and preparing the raw material that AI systems learn from. It covers everything from connecting data sources and building ingestion pipelines, to labeling training examples and generating synthetic data when real data is scarce or sensitive. Without reliable, well-managed data, no AI model can produce trustworthy outputs.",
+    why: "\"AI is only as good as the data it trains on. Most failed AI projects fail at the data layer, not the model layer. Investing here first is the highest-leverage thing an organization can do.\"",
+    checklist: [
+      "We have a documented inventory of internal data sources (databases, SaaS tools, logs, documents)",
+      "We have data ingestion pipelines that run reliably on a schedule",
+      "We have a process for labeling or annotating training data with quality control",
+      "We understand our data licensing and consent obligations",
+      "We have a strategy for handling sensitive / PII data in AI training",
+      "We have explored synthetic data generation for gaps in real data"
+    ],
+    steps: [
+      { label: "Audit", text: "Catalog every data source your org touches — CRM, ERP, logs, documents, APIs. Score each for quality, volume, and access." },
+      { label: "Pipeline", text: "Build automated ingestion pipelines. Use tools like Airbyte, Fivetran, or custom ETL. Data must flow without manual intervention." },
+      { label: "Label", text: "Stand up a labeling workflow — even a lightweight one using spreadsheets or tools like Label Studio — for supervised learning tasks." },
+      { label: "Govern", text: "Establish data lineage tracking and access controls before scaling. Know where every training record came from." }
+    ],
+    pitfalls: [
+      "Assuming \"we have lots of data\" means you have usable data — format, quality, and labeling are what matter",
+      "Neglecting data licensing: using web-scraped or third-party data without checking terms of use",
+      "Building pipelines but not monitoring them — silent failures corrupt training sets",
+      "Underestimating labeling cost and time for supervised learning tasks"
+    ],
+    accentColor: "var(--accent)"
+  },
+  "data-platform": {
+    tag: "L1 · Storage",
+    tagColor: "var(--accent)",
+    layer: "Layer 1 — Data & Infrastructure Foundation",
+    title: "Data Platform & Storage",
+    what: "A data platform provides the storage and retrieval infrastructure that AI systems depend on. This includes traditional data warehouses for structured analytics, feature stores that serve pre-computed ML inputs, and vector databases that power semantic search and RAG (Retrieval-Augmented Generation) systems. The right platform architecture determines how fast your AI teams can move.",
+    why: "\"The difference between an AI team that ships in weeks vs. months is usually the data platform. If engineers spend half their time wrangling storage layers, they're not building AI.\"",
+    checklist: [
+      "We have a centralized data warehouse or lakehouse (e.g. Snowflake, BigQuery, Databricks)",
+      "We have a feature store that serves pre-computed features to models in real time",
+      "We have deployed a vector database for embedding / semantic search use cases",
+      "Our data platform supports both batch and streaming access patterns",
+      "We have data quality monitoring that alerts on schema changes or anomalies",
+      "We track data lineage so we can trace model inputs back to their origin"
+    ],
+    steps: [
+      { label: "Warehouse", text: "Establish a cloud data warehouse as your single source of truth for structured business data." },
+      { label: "Feature Store", text: "Introduce a feature store (Feast, Tecton, or Databricks Feature Store) to centralize ML feature logic and prevent training/serving skew." },
+      { label: "Vector Layer", text: "Deploy a vector database (Pinecone, Weaviate, pgvector) as you start building LLM-powered search or RAG applications." },
+      { label: "Observability", text: "Add data quality monitoring (Great Expectations, Monte Carlo) to catch drift before it reaches models." }
+    ],
+    pitfalls: [
+      "Treating the data warehouse as a feature store — they serve different latency and consistency requirements",
+      "Introducing vector databases before having a clear RAG or semantic search use case",
+      "Skipping data lineage tooling — when a model misbehaves, you'll have no way to trace why",
+      "Underestimating the operational burden of maintaining streaming pipelines"
+    ],
+    accentColor: "var(--accent)"
+  },
+  "compute": {
+    tag: "L1 · Compute",
+    tagColor: "var(--accent)",
+    layer: "Layer 1 — Data & Infrastructure Foundation",
+    title: "Compute & Cloud Infrastructure",
+    what: "AI workloads — especially model training and large-scale inference — are among the most compute-intensive tasks in software. Organizations need a deliberate strategy for provisioning GPUs or TPUs, managing cloud costs, and building scalable inference serving infrastructure. Compute decisions early on can determine whether AI projects are economically viable at scale.",
+    why: "\"Compute is the new capex. Organizations that nail their cloud AI architecture save 40–70% over those that don't plan ahead. The bill surprise is real.\"",
+    checklist: [
+      "We have a clear cloud AI strategy (AWS, GCP, Azure, or multi-cloud) with committed spend",
+      "We can provision GPU/TPU instances on demand for training workloads",
+      "We have autoscaling inference endpoints that handle variable traffic",
+      "We track AI compute spend per team, per project, and per model",
+      "We have evaluated spot/preemptible instances for training cost reduction",
+      "We have a policy on when to use third-party inference APIs vs. self-hosted models"
+    ],
+    steps: [
+      { label: "Baseline", text: "Audit current compute usage. Separate AI workloads from general engineering to get true AI infrastructure costs." },
+      { label: "Right-size", text: "Match GPU instance types to workload. Oversized instances for inference are one of the biggest hidden costs." },
+      { label: "FinOps", text: "Implement tagging and showback reporting so teams see their compute spend. Ownership drives efficiency." },
+      { label: "API vs. Self-host", text: "Formalize a build/buy framework for inference: OpenAI/Anthropic APIs for experimentation, self-hosted for high-volume production." }
+    ],
+    pitfalls: [
+      "Running training jobs on on-demand instances when spot/preemptible would save 60–80%",
+      "No cost attribution — nobody knows which team or project is spending what",
+      "Over-provisioning inference for average load instead of peak, or vice versa",
+      "Locking into a single cloud provider without negotiating AI-specific committed use discounts"
+    ],
+    accentColor: "var(--accent)"
+  },
+  "llm": {
+    tag: "L2 · NLP / LLM",
+    tagColor: "var(--accent2)",
+    layer: "Layer 2 — Core AI Capabilities",
+    title: "Language & Generative AI",
+    what: "Large Language Models (LLMs) are the backbone of the generative AI revolution — capable of writing, reasoning, summarizing, classifying, and generating code. Organizational capability here spans knowing when to use an API (GPT, Claude, Gemini) vs. fine-tune a model vs. train from scratch, and mastering RAG architectures that ground LLM outputs in your proprietary data.",
+    why: "\"Every business process that involves reading, writing, or reasoning is now in scope for LLMs. The question is no longer 'should we use them' but 'how fast can we deploy them safely.'\"",
+    checklist: [
+      "We have evaluated at least 2–3 foundation model providers for our key use cases",
+      "We have a defined prompt engineering practice with version-controlled prompts",
+      "We have built at least one RAG (Retrieval-Augmented Generation) system",
+      "We have evaluated fine-tuning vs. prompting for our highest-value LLM use cases",
+      "We track hallucination rates and output quality for production LLM systems",
+      "We have a policy on what data can and cannot be sent to third-party LLM APIs"
+    ],
+    steps: [
+      { label: "API First", text: "Start with hosted APIs (OpenAI, Anthropic, Google). Build fast, measure value, don't over-engineer early." },
+      { label: "RAG", text: "Ground LLM answers in your org's data using RAG. This is the highest-ROI LLM pattern for most enterprises." },
+      { label: "Evals", text: "Build evaluation harnesses before scaling. Define what 'good' means for your task and measure it automatically." },
+      { label: "Fine-tune", text: "Only fine-tune when you've confirmed prompting + RAG isn't sufficient and you have sufficient high-quality examples (500+)." }
+    ],
+    pitfalls: [
+      "Starting with fine-tuning before exhausting prompting and RAG — 90% of use cases don't need it",
+      "No eval framework — shipping LLM features without measuring output quality is flying blind",
+      "Ignoring data governance for LLM inputs — sending sensitive data to third-party APIs",
+      "Chasing the newest model instead of optimizing prompts and retrieval for the current one"
+    ],
+    accentColor: "var(--accent2)"
+  },
+  "vision": {
+    tag: "L2 · Vision",
+    tagColor: "var(--accent2)",
+    layer: "Layer 2 — Core AI Capabilities",
+    title: "Computer Vision",
+    what: "Computer vision gives machines the ability to understand and extract information from images and video. Use cases span manufacturing (defect detection), retail (shelf analytics, checkout-free stores), healthcare (medical imaging), logistics (barcode scanning, damage assessment), and content moderation. Modern vision AI combines custom-trained models with powerful foundation models like GPT-4V.",
+    why: "\"Vision AI is already delivering ROI in manufacturing and quality control that is measurable in weeks, not years. If your business involves physical products or spaces, vision AI belongs in your roadmap.\"",
+    checklist: [
+      "We have identified at least one high-value use case for computer vision in our operations",
+      "We have a process for collecting and labeling image/video training data",
+      "We have evaluated pre-trained vision APIs before committing to custom training",
+      "We have defined accuracy and latency requirements for vision models in production",
+      "We have a plan for edge vs. cloud inference for vision workloads",
+      "We test vision models for performance across demographic and environmental variation"
+    ],
+    steps: [
+      { label: "Use Case", text: "Identify one high-volume, repetitive visual inspection or classification task. Narrow scope = faster proof of value." },
+      { label: "Data First", text: "Collect representative images covering the variability you'll see in production (lighting, angle, defect type)." },
+      { label: "Pre-trained", text: "Start with pre-trained APIs (Google Vision, AWS Rekognition, Azure Computer Vision) before committing to custom models." },
+      { label: "Edge vs. Cloud", text: "Decide early whether inference needs to be on-device (edge, low latency) or cloud-based. This drives architecture significantly." }
+    ],
+    pitfalls: [
+      "Training on a narrow dataset and discovering the model fails on real-world variation",
+      "Ignoring edge deployment requirements until late in the project when camera hardware is already set",
+      "Conflating high training accuracy with production reliability — always test on out-of-distribution examples",
+      "Skipping demographic and fairness testing for vision systems involving people"
+    ],
+    accentColor: "var(--accent2)"
+  },
+  "classicml": {
+    tag: "L2 · Prediction",
+    tagColor: "var(--accent2)",
+    layer: "Layer 2 — Core AI Capabilities",
+    title: "Classical ML & Predictive Analytics",
+    what: "Before LLMs captured all the attention, classical machine learning was quietly generating enormous business value. Gradient boosting, time series forecasting, anomaly detection, and recommendation systems are mature, interpretable, and highly reliable when applied to well-structured tabular data. For many business prediction problems — churn, demand, fraud, pricing — they outperform LLMs and cost a fraction.",
+    why: "\"Don't let the AI hype distract you from classical ML. A well-tuned XGBoost model predicting customer churn can outperform an LLM on that task while being 100x cheaper to run and far easier to explain to stakeholders.\"",
+    checklist: [
+      "We have identified our top 3 business prediction problems (churn, demand, fraud, etc.)",
+      "We have clean, labeled historical datasets for at least one prediction use case",
+      "We use AutoML or structured experimentation to select model architectures",
+      "Our ML models are monitored for data drift and performance degradation in production",
+      "We have model explainability practices (SHAP, LIME) for stakeholder-facing predictions",
+      "We retrain models on a defined schedule or when drift thresholds are crossed"
+    ],
+    steps: [
+      { label: "Problem Framing", text: "Define the prediction task precisely: what is the label, the features, the time horizon, and the business decision it informs." },
+      { label: "Baseline", text: "Always build a simple baseline first (mean prediction, logistic regression). This sets a bar and often reveals data quality issues." },
+      { label: "AutoML", text: "Use AutoML tools (H2O, AutoGluon, Google AutoML) for initial model selection before manual tuning." },
+      { label: "Monitor", text: "Set up data drift and prediction drift monitoring from day one in production. Models decay silently without it." }
+    ],
+    pitfalls: [
+      "Jumping to neural networks for tabular data when gradient boosted trees (XGBoost, LightGBM) consistently outperform them",
+      "No monitoring — classical ML models degrade when the world changes and nobody notices for months",
+      "Feature leakage — accidentally including future information in training features, causing spectacular production failure",
+      "Building models without a clear decision-maker who will act on the predictions"
+    ],
+    accentColor: "var(--accent2)"
+  },
+  "agents": {
+    tag: "L2 · Agents",
+    tagColor: "var(--accent2)",
+    layer: "Layer 2 — Core AI Capabilities",
+    title: "Agentic AI & Automation",
+    what: "Agentic AI refers to systems where AI models take sequences of actions autonomously — browsing the web, writing and executing code, calling APIs, managing files — to complete longer-horizon tasks. This is the fastest-evolving frontier of applied AI. It promises to automate entire workflows rather than single steps, but requires careful design to remain reliable and safe.",
+    why: "\"Agentic AI is where the step-change business value will come from in the next 3–5 years. A single agent can replace multi-step workflows that currently require multiple human handoffs. The organizations building this muscle now will have a significant head start.\"",
+    checklist: [
+      "We have mapped at least one multi-step business process that could be automated end-to-end",
+      "We have evaluated agent frameworks (LangChain, LlamaIndex, AutoGen, CrewAI)",
+      "We have defined where human-in-the-loop checkpoints are required in our agentic workflows",
+      "We have guardrails on what actions agents are permitted to take autonomously",
+      "We log all agent actions for auditability and debugging",
+      "We have tested agent failure modes and defined recovery/escalation paths"
+    ],
+    steps: [
+      { label: "Map", text: "Pick a workflow with 5–10 defined steps, clear inputs/outputs, and a measurable success criterion. Avoid ambiguous 'open world' tasks initially." },
+      { label: "Tools", text: "Define the tool set the agent can use (APIs, databases, code execution). Narrow tool scope = more reliable behavior." },
+      { label: "HITL", text: "Design human-in-the-loop checkpoints for any step that is irreversible, costly, or customer-facing." },
+      { label: "Observe", text: "Instrument agent traces from day one. You cannot debug or improve what you can't observe." }
+    ],
+    pitfalls: [
+      "Giving agents too many tools and too much autonomy before establishing reliability on simple tasks",
+      "Skipping observability — agentic failures are hard to reproduce without full traces",
+      "No escalation path — agents that get stuck silently fail instead of handing off to humans",
+      "Underestimating latency: multi-step LLM chains can take 30–120 seconds, which surprises users"
+    ],
+    accentColor: "var(--accent2)"
+  },
+  "audio": {
+    tag: "L2 · Audio",
+    tagColor: "var(--accent2)",
+    layer: "Layer 2 — Core AI Capabilities",
+    title: "Speech & Audio AI",
+    what: "Speech and audio AI covers the conversion of spoken language to text (ASR), text to speech synthesis (TTS), identifying who is speaking (diarization), and detecting events in audio streams. Business applications include call center automation, meeting transcription and summarization, voice assistants, accessibility tooling, and real-time coaching.",
+    why: "\"Voice is still the primary interface for vast amounts of business activity — sales calls, customer support, field operations. Organizations that process and understand this audio data have an information advantage their competitors lack.\"",
+    checklist: [
+      "We have evaluated speech-to-text for our customer service or meeting transcription needs",
+      "We have a plan for how transcribed audio data is stored, retained, and deleted",
+      "We have tested ASR accuracy on domain-specific vocabulary (product names, jargon)",
+      "We have assessed voice AI use cases in customer-facing products",
+      "We comply with two-party consent requirements for call recording in all relevant jurisdictions",
+      "We have evaluated real-time vs. batch transcription architectures for our use cases"
+    ],
+    steps: [
+      { label: "Transcription", text: "Start with meeting transcription and call recording analysis — low risk, immediate ROI, lots of vendor options." },
+      { label: "Domain Tuning", text: "Test off-the-shelf ASR on your actual audio. Custom vocabulary and domain fine-tuning is usually needed." },
+      { label: "Compliance", text: "Get legal sign-off on recording consent requirements before any production audio capture." },
+      { label: "Analysis Layer", text: "Layer an LLM over transcripts for summarization, sentiment, and action item extraction." }
+    ],
+    pitfalls: [
+      "Deploying audio AI without addressing two-party consent and data retention policies",
+      "Testing ASR only on clean audio — real call center and field audio is noisy and accented",
+      "Building real-time voice pipelines without budgeting for the latency constraints they impose",
+      "Ignoring TTS quality differences — synthetic voices vary dramatically in naturalness and brand fit"
+    ],
+    accentColor: "var(--accent2)"
+  },
+  "model-lifecycle": {
+    tag: "L3 · MLOps",
+    tagColor: "var(--accent3)",
+    layer: "Layer 3 — AI Platform & MLOps",
+    title: "Model Lifecycle Management",
+    what: "MLOps is the discipline of applying DevOps principles to machine learning — covering experiment tracking, model versioning, automated pipelines, and production monitoring. Without MLOps, organizations end up with 'model graveyards': models trained once, deployed, and never updated as the world changes around them. MLOps closes the loop from training to production to retraining.",
+    why: "\"The difference between a successful AI organization and a failed one is almost always MLOps. Anyone can train a model. Making it reliable, reproducible, and improvable over time in production is what separates the best from the rest.\"",
+    checklist: [
+      "We use experiment tracking (MLflow, W&B, Neptune) for all model training runs",
+      "All production models are registered in a centralized model registry with version history",
+      "We have automated CI/CD pipelines that retrain and redeploy models on a schedule or trigger",
+      "We monitor production models for data drift and performance degradation",
+      "We can roll back a model deployment in under 30 minutes if a regression is detected",
+      "Model training and deployment processes are documented and reproducible by any team member"
+    ],
+    steps: [
+      { label: "Track", text: "Add experiment tracking to every training run. Record hyperparameters, dataset versions, and evaluation metrics. MLflow or W&B work well." },
+      { label: "Registry", text: "Centralize models in a registry. Every production model should have a canonical home with its lineage, performance, and deployment history." },
+      { label: "Automate", text: "Build automated retraining pipelines so models can be updated on a schedule without manual intervention." },
+      { label: "Monitor", text: "Add production monitoring before going live. Track prediction distributions, data drift, and business KPIs tied to model outputs." }
+    ],
+    pitfalls: [
+      "Training models in notebooks with no reproducibility — if the person leaves, the model is a black box",
+      "No model registry — teams re-train the same models from scratch because nobody knows what already exists",
+      "Monitoring accuracy metrics but not business outcomes — a model can be accurate but stop driving value",
+      "Retraining on a fixed schedule instead of trigger-based retraining when drift is detected"
+    ],
+    accentColor: "var(--accent3)"
+  },
+  "deployment": {
+    tag: "L3 · Serving",
+    tagColor: "var(--accent3)",
+    layer: "Layer 3 — AI Platform & MLOps",
+    title: "Model Deployment & Serving",
+    what: "Deploying a model into production involves far more than exporting a file. It requires serving infrastructure that handles traffic, latency SLAs, model versioning, A/B testing, and graceful degradation. The difference between batch inference (run overnight on a dataset) and real-time serving (respond in <100ms to a user request) requires very different architectures.",
+    why: "\"A model that isn't deployed is a science project. Deployment engineering is what converts model accuracy into business value — and it's consistently the most underestimated part of the ML lifecycle.\"",
+    checklist: [
+      "We have defined latency and throughput SLAs for each production AI system",
+      "We use canary or shadow deployments before full production rollout for new models",
+      "We can run A/B tests between model versions with proper traffic splitting",
+      "We have fallback logic when a model fails or returns low-confidence outputs",
+      "We have evaluated model compression techniques (quantization, distillation) for latency/cost",
+      "We separate batch inference workloads from real-time serving infrastructure"
+    ],
+    steps: [
+      { label: "Requirements", text: "Define latency, throughput, and availability requirements before selecting serving infrastructure. These dictate everything." },
+      { label: "Containerize", text: "Package models as Docker containers with versioned APIs. This makes deployment and rollback straightforward." },
+      { label: "Canary", text: "Never go straight to 100% traffic. Use canary rollouts (5% → 25% → 100%) with automatic rollback on regression." },
+      { label: "Optimize", text: "Apply quantization (8-bit, 4-bit) and batching to improve inference throughput and cost before scaling." }
+    ],
+    pitfalls: [
+      "Not defining latency requirements upfront — discovering a model takes 2 seconds when the UI needs 200ms is very expensive to fix late",
+      "Deploying to 100% traffic on day one without any canary or A/B safeguard",
+      "Using the same infrastructure for batch scoring and real-time inference — they have opposite tradeoff profiles",
+      "No fallback behavior — if a model fails, the user should get a degraded experience, not an error"
+    ],
+    accentColor: "var(--accent3)"
+  },
+  "devex": {
+    tag: "L3 · Dev Tools",
+    tagColor: "var(--accent3)",
+    layer: "Layer 3 — AI Platform & MLOps",
+    title: "AI Developer Experience",
+    what: "The velocity of your AI team depends heavily on the quality of internal developer tooling. This includes SDKs that abstract common AI patterns, prompt management systems that version and deploy prompts like code, evaluation harnesses that measure output quality automatically, and AI-assisted development tools that help engineers write code faster.",
+    why: "\"In AI teams, developer experience is a force multiplier. Invest in the platform that makes the 10th and 20th AI project easier to build than the first. Otherwise you rebuild the same scaffolding over and over.\"",
+    checklist: [
+      "AI engineers have a shared internal library of reusable components (RAG, embeddings, eval utilities)",
+      "Prompts used in production are version-controlled and deployed through a managed system",
+      "We have a standard evaluation harness teams use to measure model output quality",
+      "AI-assisted coding tools (GitHub Copilot, Cursor, etc.) are available to all engineers",
+      "New AI projects can be scaffolded from an internal template in under a day",
+      "Engineers can run evaluations locally and in CI without significant setup friction"
+    ],
+    steps: [
+      { label: "Audit Friction", text: "Survey AI engineers: what do they rebuild every project? These are your internal library candidates." },
+      { label: "Prompt Mgmt", text: "Adopt a prompt management tool (Langfuse, Promptflow, or a git-based system) before you have more than 5 prompts in production." },
+      { label: "Eval Standard", text: "Pick one eval framework and make it the default. Consistency matters more than perfection here." },
+      { label: "Templates", text: "Create project templates (RAG, classification, agent) that encode your best practices and reduce new project setup to hours." }
+    ],
+    pitfalls: [
+      "Prompts stored in code comments or undocumented config files — this is technical debt that compounds fast",
+      "Every team building their own RAG scaffold instead of sharing one well-built internal library",
+      "Eval frameworks that only run in notebooks — evaluation must be part of CI to be effective",
+      "Underinvesting in internal tooling because it 'doesn't ship features' — the compounding returns are enormous"
+    ],
+    accentColor: "var(--accent3)"
+  },
+  "evals": {
+    tag: "L3 · Evals",
+    tagColor: "var(--accent3)",
+    layer: "Layer 3 — AI Platform & MLOps",
+    title: "Testing & Evaluation",
+    what: "Evaluation is how you know if your AI system actually works — and if it keeps working as you change it. AI evals combine automated quality scoring, human review, and adversarial red-teaming to measure output accuracy, safety, and helpfulness. Organizations that build strong eval cultures ship faster and with more confidence because they catch regressions before they reach users.",
+    why: "\"Evals are the tests for AI. Teams that skip them ship broken AI with confidence. Teams that invest in them are the ones that compound quality improvements over time instead of playing whack-a-mole with bugs.\"",
+    checklist: [
+      "We have defined quantitative success metrics for every AI system in production",
+      "We have automated evaluation pipelines that run on every model or prompt change",
+      "We use LLM-as-judge or embedding similarity for scalable automated eval",
+      "We maintain a golden dataset of representative test cases for each major AI capability",
+      "We conduct human evaluation for high-stakes AI outputs before major releases",
+      "We run adversarial red-teaming for customer-facing AI systems before launch"
+    ],
+    steps: [
+      { label: "Define", text: "Before building, define what 'correct' looks like. Write 20 example inputs with expected good/bad outputs. This is your eval seed." },
+      { label: "Automate", text: "Use LLM-as-judge (GPT-4 or Claude scoring outputs) to scale evaluation across hundreds of examples cheaply." },
+      { label: "Golden Set", text: "Build and maintain a curated test set of 100–500 examples that runs in CI on every change." },
+      { label: "Red-team", text: "For customer-facing systems: run structured adversarial testing before launch. Document findings and mitigations." }
+    ],
+    pitfalls: [
+      "Measuring only 'does it run' not 'is the output good' — AI-specific quality regression is invisible without evals",
+      "Golden datasets that go stale — they must be updated as the product evolves",
+      "Over-relying on automated metrics without any human spot-checking",
+      "Not red-teaming before customer-facing AI launches — discovering jailbreaks in production is a bad day"
+    ],
+    accentColor: "var(--accent3)"
+  },
+  "customer-ai": {
+    tag: "L4 · Customer",
+    tagColor: "var(--accent4)",
+    layer: "Layer 4 — Business Application Layer",
+    title: "Customer-Facing AI",
+    what: "Customer-facing AI represents the most visible — and highest-stakes — deployment of AI in your organization. This includes conversational AI chatbots for support, personalization engines that tailor content and product recommendations, AI-powered search that understands intent rather than keywords, and proactive AI that reaches customers at the right moment with the right message.",
+    why: "\"Customer-facing AI is where you create direct, measurable value and where failures are most visible. Get it right and you win loyalty and efficiency. Get it wrong and the backlash is public. Invest in quality and oversight here above all.\"",
+    checklist: [
+      "We have mapped customer journeys to identify where AI can reduce friction or increase value",
+      "Our customer-facing AI has fallback paths to human agents for complex or sensitive cases",
+      "We measure customer satisfaction (CSAT/NPS) for AI-handled interactions separately",
+      "Our personalization systems comply with data privacy regulations (GDPR, CCPA)",
+      "We disclose to customers when they are interacting with an AI system",
+      "We monitor for harmful, biased, or off-brand AI outputs in customer interactions"
+    ],
+    steps: [
+      { label: "Journey Map", text: "Map your highest-volume customer touchpoints. Rank by volume × friction. The top item is your first AI target." },
+      { label: "Pilot", text: "Run a limited pilot with real customers on a narrow, well-defined task. Measure before scaling." },
+      { label: "Escalation", text: "Design escalation paths before launch. Every AI interaction needs a graceful way to reach a human." },
+      { label: "Measure", text: "Track AI-specific CSAT alongside resolution rate, handle time, and containment rate." }
+    ],
+    pitfalls: [
+      "Deploying AI chatbots as cost-cutting tools without investing in quality — customers notice and resent bad AI",
+      "No escalation path — trapping customers in AI loops that can't resolve their issue destroys satisfaction",
+      "Not disclosing AI interaction to customers — eroding trust when they discover it",
+      "Optimizing for containment rate (keeping users in the AI) instead of resolution quality"
+    ],
+    accentColor: "var(--accent4)"
+  },
+  "ops-ai": {
+    tag: "L4 · Operations",
+    tagColor: "var(--accent4)",
+    layer: "Layer 4 — Business Application Layer",
+    title: "Operational AI",
+    what: "Operational AI applies intelligence to internal business processes — optimizing supply chains, predicting when equipment will fail before it does, automating quality control, and accelerating RPA (Robotic Process Automation) with language understanding. These deployments often have the clearest ROI because they replace or augment well-defined, repetitive tasks with measurable time and cost benchmarks.",
+    why: "\"Operational AI is where you find the fastest, most defensible ROI. It's less glamorous than the chatbot on the website, but a model that cuts defect rates by 30% or prevents an unplanned equipment shutdown has an ROI you can calculate to the dollar.\"",
+    checklist: [
+      "We have identified our top 3 operational processes by volume and manual effort involved",
+      "We have measured the current baseline (time, cost, error rate) for target processes",
+      "We have access to historical operational data for training predictive models",
+      "We have engaged frontline workers who will interact with AI-augmented processes",
+      "We have a plan for how AI decisions are reviewed and overridden by humans",
+      "We track AI impact on operational KPIs (throughput, error rate, cost) quarterly"
+    ],
+    steps: [
+      { label: "Baseline", text: "Measure the current state precisely before automating anything. You can't prove ROI without a clear before." },
+      { label: "Quick Win", text: "Pick a process with a narrow, well-defined input/output and high volume. Document processing, invoice routing, and defect detection are classic starting points." },
+      { label: "Augment First", text: "Before full automation, augment: surface AI suggestions to human operators and measure acceptance rate. High acceptance = automate." },
+      { label: "Track KPIs", text: "Tie AI deployment directly to operational KPIs that executives track. This secures ongoing investment." }
+    ],
+    pitfalls: [
+      "Automating a broken process — AI amplifies bad process design at scale, it doesn't fix it",
+      "Not involving frontline workers who will work alongside the AI — resistance kills adoption",
+      "Skipping the 'augment' phase and automating fully before trust is established",
+      "No override mechanism for humans when the AI is clearly wrong — especially in safety-critical contexts"
+    ],
+    accentColor: "var(--accent4)"
+  },
+  "enterprise-ai": {
+    tag: "L4 · Internal",
+    tagColor: "var(--accent4)",
+    layer: "Layer 4 — Business Application Layer",
+    title: "Enterprise Productivity AI",
+    what: "Enterprise productivity AI brings the power of generative AI to internal workflows — knowledge management, software development, document processing, and decision support. Internal AI assistants grounded in company knowledge bases, AI code review, contract analysis, and meeting summarization collectively free up significant professional time and raise the quality of internal work.",
+    why: "\"Internal productivity AI often has the best risk/reward ratio of any AI investment. The stakes are lower than customer-facing AI, the users are sophisticated enough to catch mistakes, and the time savings compound across every knowledge worker in the organization.\"",
+    checklist: [
+      "We have deployed an internal AI assistant with access to company knowledge (wiki, docs, policies)",
+      "AI coding tools are available to our engineering teams and usage is tracked",
+      "We have AI-assisted document drafting for high-volume documents (contracts, reports, emails)",
+      "We have a policy on what internal data AI tools can access and retain",
+      "We measure productivity gains from internal AI tools (time saved, output quality)",
+      "We have a feedback loop for employees to report AI errors or concerns"
+    ],
+    steps: [
+      { label: "Knowledge Bot", text: "Deploy an internal assistant (Notion AI, Guru, or custom RAG) on company wikis and policies. This is the fastest ROI for knowledge workers." },
+      { label: "Code AI", text: "Roll out AI coding tools (GitHub Copilot, Cursor) to engineering teams with clear policies on code review." },
+      { label: "Document AI", text: "Identify high-volume internal documents (meeting summaries, weekly reports, status updates) and pilot AI drafting." },
+      { label: "Measure", text: "Survey employees on time saved. Aim for qualitative wins first, then build quantitative measurement frameworks." }
+    ],
+    pitfalls: [
+      "Deploying internal AI tools without a data governance policy — employees will experiment with sensitive data",
+      "No feedback mechanism — internal AI errors stay invisible and compound unless there's an easy way to report them",
+      "Treating internal AI as a cost-cutting exercise rather than a capability multiplier — the framing drives adoption",
+      "Skipping change management — tools that aren't embedded in workflows gather dust"
+    ],
+    accentColor: "var(--accent4)"
+  },
+  "governance": {
+    tag: "L5 · Governance",
+    tagColor: "rgba(255,255,255,0.7)",
+    layer: "Layer 5 — Governance, Risk & Enablement",
+    title: "AI Risk, Ethics & Compliance",
+    what: "AI governance is the set of policies, processes, and oversight structures that ensure AI systems are deployed responsibly — accurately, fairly, safely, and in compliance with applicable laws. As AI scales across an organization, governance is what prevents isolated mistakes from becoming systemic harms. It covers use case review, bias auditing, regulatory compliance, and supply chain risk from third-party AI models.",
+    why: "\"AI without governance is technical debt of the highest order. The organizations that will win long-term are those that build trust — with regulators, customers, and employees — through transparent, accountable AI practices. Governance is not a tax; it's a moat.\"",
+    checklist: [
+      "We have a formal AI use case review process before any AI system enters production",
+      "We have conducted bias and fairness audits on AI systems that affect people",
+      "We have mapped our AI portfolio to EU AI Act risk categories (prohibited, high-risk, limited-risk)",
+      "We have a responsible AI policy that is publicly available and internally enforced",
+      "We log AI decisions that affect individuals and can retrieve them for audit",
+      "We have assessed third-party AI vendors and API providers for their own governance practices"
+    ],
+    steps: [
+      { label: "Policy", text: "Draft a Responsible AI policy covering prohibited use cases, high-risk thresholds, and required review gates. Even one page is better than none." },
+      { label: "Review Gate", text: "Establish a lightweight AI review committee (legal, ethics, risk, business) that evaluates high-risk AI deployments before launch." },
+      { label: "Bias Audit", text: "For any AI that affects hiring, lending, healthcare, or criminal justice: conduct a third-party bias audit before and after deployment." },
+      { label: "Regulation Map", text: "Map your AI use cases to relevant regulations: EU AI Act, CCPA, HIPAA, financial services AI guidance, etc." }
+    ],
+    pitfalls: [
+      "Treating governance as a checkbox rather than a continuous practice — the risk profile of AI systems changes as they scale",
+      "No escalation path for employees who see AI behaving badly — silent harm is the worst outcome",
+      "Assuming third-party AI APIs are fully governed by the vendor — you are responsible for how you deploy and use them",
+      "Waiting for regulation to mandate governance instead of building it proactively and gaining first-mover trust"
+    ],
+    accentColor: "rgba(200,220,240,0.7)"
+  },
+  "enablement": {
+    tag: "L5 · Enablement",
+    tagColor: "rgba(255,255,255,0.7)",
+    layer: "Layer 5 — Governance, Risk & Enablement",
+    title: "Talent, Culture & AI Strategy",
+    what: "Even the best AI technology fails without the organizational capacity to use it. AI enablement covers the human side: upskilling the workforce, building or acquiring AI talent, establishing a Center of Excellence that elevates org-wide practice, and making the strategic decisions — build vs. buy vs. partner — that determine how AI investments compound over time.",
+    why: "\"Technology is the easiest part of AI transformation. Culture, talent, and strategy are the hard parts. The organizations that win at AI are those that treat it as a new organizational capability, not just a new technology to install.\"",
+    checklist: [
+      "We have defined AI literacy levels required for different roles (executive, manager, practitioner)",
+      "We have an AI upskilling program available to all employees, not just technical staff",
+      "We have an AI Center of Excellence (or equivalent) that sets standards and shares best practices",
+      "We have a documented AI strategy with a prioritized portfolio of use cases",
+      "We have a defined Build vs. Buy vs. Partner decision framework for AI investments",
+      "We track and celebrate AI success stories internally to drive cultural momentum"
+    ],
+    steps: [
+      { label: "Literacy", text: "Deploy an AI literacy program for the entire organization — executives and managers need this as much as technical teams." },
+      { label: "CoE", text: "Form an AI Center of Excellence (even 2–3 people) whose job is to share knowledge, maintain standards, and enable teams." },
+      { label: "Strategy", text: "Develop a prioritized AI portfolio: rank use cases by value × feasibility × strategic fit. Update it quarterly." },
+      { label: "Build/Buy/Partner", text: "Document your decision framework for when to build custom AI, license a platform, or partner. Undocumented decisions are inconsistently made." }
+    ],
+    pitfalls: [
+      "Treating AI strategy as a one-time document rather than a living practice that evolves with the technology",
+      "Building an AI team in isolation from the business — they build impressive demos that never deploy",
+      "Hiring AI talent without a retention strategy — AI practitioners are in extremely high demand",
+      "Underinvesting in non-technical AI literacy — business stakeholders who don't understand AI basics make poor decisions about it"
+    ],
+    accentColor: "rgba(200,220,240,0.7)"
+  }
+};
+
+// Per-card checked state
+const checkStates = {};
+
+function openPanel(id) {
+  const cap = CAPABILITIES[id];
+  if (!cap) return;
+
+  // Active card state
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+
+  // Initialize check state
+  if (!checkStates[id]) {
+    checkStates[id] = new Array(cap.checklist.length).fill(false);
+  }
+
+  // Header
+  const tag = document.getElementById('panelTag');
+  tag.textContent = cap.tag;
+  tag.style.background = cap.accentColor + '22';
+  tag.style.color = cap.accentColor;
+  tag.style.border = `1px solid ${cap.accentColor}44`;
+
+  document.getElementById('panelTitle').textContent = cap.title;
+  document.getElementById('panelLayer').textContent = cap.layer;
+
+  // Body
+  const body = document.getElementById('panelBody');
+  body.innerHTML = `
+    <div>
+      <div class="panel-section-title">What This Is</div>
+      <p class="panel-what">${cap.what}</p>
+    </div>
+    <div>
+      <div class="panel-section-title">Why It Matters</div>
+      <blockquote class="panel-why">${cap.why}</blockquote>
+    </div>
+    <div>
+      <div class="panel-section-title">Readiness Checklist</div>
+      <div class="checklist" id="checklist-${id}">
+        ${cap.checklist.map((item, i) => `
+          <div class="check-item ${checkStates[id][i] ? 'checked-item' : ''}" id="check-wrap-${id}-${i}">
+            <div class="check-box ${checkStates[id][i] ? 'checked' : ''}"
+              style="border-color: ${cap.accentColor}; ${checkStates[id][i] ? `background: ${cap.accentColor};` : ''}"
+              onclick="toggleCheck('${id}', ${i})">${checkStates[id][i] ? '✓' : ''}</div>
+            <span class="check-text">${item}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="panel-section-title">How To Build This Capability</div>
+      <div class="maturity-steps">
+        ${cap.steps.map((s, i) => `
+          <div class="maturity-step" style="border-left-color: ${cap.accentColor}66">
+            <span class="step-num">0${i+1}</span>
+            <div><strong style="color:${cap.accentColor}; font-size:12px;">${s.label}</strong><br>${s.text}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="panel-section-title">Common Pitfalls</div>
+      <div class="pitfalls">
+        ${cap.pitfalls.map(p => `<div class="pitfall">${p}</div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  updateProgress(id, cap);
+
+  // Open
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('trainingPanel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('trainingPanel').scrollTop = 0;
+
+  // Color the progress fill
+  document.getElementById('progressFill').style.background = cap.accentColor;
+}
+
+function toggleCheck(id, idx) {
+  checkStates[id][idx] = !checkStates[id][idx];
+  const cap = CAPABILITIES[id];
+
+  const wrap = document.getElementById(`check-wrap-${id}-${idx}`);
+  const box = wrap.querySelector('.check-box');
+  if (checkStates[id][idx]) {
+    wrap.classList.add('checked-item');
+    box.classList.add('checked');
+    box.style.background = cap.accentColor;
+    box.textContent = '✓';
+  } else {
+    wrap.classList.remove('checked-item');
+    box.classList.remove('checked');
+    box.style.background = 'transparent';
+    box.textContent = '';
+  }
+  updateProgress(id, cap);
+}
+
+function updateProgress(id, cap) {
+  const states = checkStates[id];
+  const done = states.filter(Boolean).length;
+  const total = states.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function closePanel() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('trainingPanel').classList.remove('open');
+  document.body.style.overflow = '';
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+</script>
+</body>
+</html>
